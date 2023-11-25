@@ -82,7 +82,11 @@ class BoulderbarCapacityTracker:
     def plot(self):
         dtf = BoulderbarCapacityTracker.date_fmt.replace('%', '')
         plt.date_form(dtf, dtf)
-        df = pd.read_csv(BoulderbarCapacityTracker.data_path)
+        try:
+            df = pd.read_csv(BoulderbarCapacityTracker.data_path)
+        except FileNotFoundError:
+            print(f'{BoulderbarCapacityTracker.data_path} not found.')
+            return
         df.set_index('Date')       
         plt.title('Boulderbar Capacity')        
         for name in df.columns.values[1:]:
