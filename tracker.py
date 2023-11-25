@@ -21,6 +21,21 @@ class BoulderbarCapacityTracker:
     ('Linz', 'LNZ'),
     ('Salzburg', 'SGB'),
 ]
+    def save(data):
+        file_exists = os.path.exists(BoulderbarCapacityTracker.data_path)
+            
+        with open(BoulderbarCapacityTracker.data_path, 'a', newline='\n') as csvfile:
+            fieldnames = ['Date', ] + [v[0] for v in BoulderbarCapacityTracker.start_urls]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            if not file_exists:
+                writer.writeheader()
+            for date, vals in data:                    
+                entry = {'Date': date.strftime(BoulderbarCapacityTracker.date_fmt)}
+                for i, v in enumerate(vals):
+                    entry[BoulderbarCapacityTracker.start_urls[i][0]] = v
+                print(entry)
+                writer.writerow(entry)
+
     def run(self, _delay_min, _plot=False):
 
         if _plot:
@@ -50,24 +65,18 @@ class BoulderbarCapacityTracker:
                 entry = (datetime.datetime.now(), values)
                 print(entry)
                 data.append(entry)
+
+                # write to file
+                if len(data) > 10:
+                    self.save(data)
+                    data = []                
                 
                 time.sleep(_delay_min * 60.0)
         except KeyboardInterrupt:   
             pass
         finally:
-            file_exists = os.path.exists(BoulderbarCapacityTracker.data_path)
+            self.save(data)
             
-            with open(BoulderbarCapacityTracker.data_path, 'a', newline='\n') as csvfile:
-                fieldnames = ['Date', ] + [v[0] for v in BoulderbarCapacityTracker.start_urls]
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                if not file_exists:
-                    writer.writeheader()
-                for date, vals in data:                    
-                    entry = {'Date': date.strftime(BoulderbarCapacityTracker.date_fmt)}
-                    for i, v in enumerate(vals):
-                        entry[BoulderbarCapacityTracker.start_urls[i][0]] = v
-                    print(entry)
-                    writer.writerow(entry)
 
     def plot(self):
         dtf = BoulderbarCapacityTracker.date_fmt.replace('%', '')
