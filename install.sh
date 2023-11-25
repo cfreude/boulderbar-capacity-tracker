@@ -5,4 +5,4 @@ cd boulderbar
 python -m venv ./env
 source ./env/bin/activate
 pip install pandas plotext
-git clone 
+python tracker.py 5.0

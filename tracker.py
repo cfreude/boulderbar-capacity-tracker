@@ -6,12 +6,11 @@ import time, json, datetime, pickle, os, csv
 import pandas as pd
 import plotext as plt
 
+
 class BoulderbarCapacityTracker:
 
     date_fmt = "%d-%m-%Y %H:%M:%S"
-
-    data_path = './data-packup.csv'
-    
+    data_path = './data-packup.csv'    
     prefix_url = 'https://flash-cloud.boulderbar.net/modules/bbext/CustomerCapacity.php?gym=%s'
 
     start_urls = [
@@ -22,9 +21,6 @@ class BoulderbarCapacityTracker:
     ('Linz', 'LNZ'),
     ('Salzburg', 'SGB'),
 ]
-    def __init__(self, ) -> None:
-        pass
-
     def run(self, _delay_min, _plot=False):
 
         if _plot:
@@ -85,13 +81,19 @@ class BoulderbarCapacityTracker:
             plt.scatter(date_vals, percent, label=f'{name}:')
         plt.show()
     
+
 if __name__ == '__main__':
-    import sys
-    tracker = BoulderbarCapacityTracker()
-    interv = 5.0
-    if len(sys.argv) > 1:
-        interv = float(sys.argv[1])  
-    plot = False
-    if len(sys.argv) > 2 and sys.argv[2] == '1':
-        plot = True    
-    tracker.run(interv, plot)
+
+    import argparse  
+
+    parser = argparse.ArgumentParser(
+                    prog='Boulderbar Capacity Tracker',
+                    description='Periodically fetches the Boulderbar capacity from the web (https://boulderbar.net/) and stores it in a CSV.')
+
+    parser.add_argument('period', type=float, default=5.0,
+                        help='The period in minutes.')
+    parser.add_argument('--d', action='store_true', default=False,
+                        help='Display data in the cmd-line.')
+    args = parser.parse_args()
+
+    BoulderbarCapacityTracker().run(args.period, args.d)
