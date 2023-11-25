@@ -11,15 +11,16 @@ class BoulderbarCapacityTracker:
 
     date_fmt = "%d-%m-%Y %H:%M:%S"
     data_path = './boulderbar-capacity-log.csv'    
-    prefix_url = 'https://flash-cloud.boulderbar.net/modules/bbext/CustomerCapacity.php?gym=%s'
+    prefix_url_wien = 'https://flash-cloud.boulderbar.net/modules/bbext/CustomerCapacity.php?gym=%s'
+    prefix_url_other = 'https://shopsbg.boulderbar.net:8081/modules/bbext/CustomerCapacity.php?gym=%s'
 
     start_urls = [
-    ('Hannovergasse', 'han'),
-    ('Wienerberg', 'wb'),
-    ('Hauptbahnhof', 'hbf'),
-    ('Seestadt', 'see'),
-    ('Linz', 'LNZ'),
-    ('Salzburg', 'SGB'),
+    ('Hannovergasse', prefix_url_wien, 'han'),
+    ('Wienerberg', prefix_url_wien, 'wb'),
+    ('Hauptbahnhof', prefix_url_wien, 'hbf'),
+    ('Seestadt', prefix_url_wien, 'see'),
+    ('Linz', prefix_url_other, 'LNZ'),
+    ('Salzburg', prefix_url_other, 'SBG'),
 ]
     def save(self, data):
         file_exists = os.path.exists(BoulderbarCapacityTracker.data_path)
@@ -49,8 +50,8 @@ class BoulderbarCapacityTracker:
 
                 values = []
                 try: 
-                    for name, url_postfix in BoulderbarCapacityTracker.start_urls:
-                        page = urlopen(BoulderbarCapacityTracker.prefix_url % url_postfix)
+                    for name, prefix_url, url_postfix in BoulderbarCapacityTracker.start_urls:
+                        page = urlopen(prefix_url % url_postfix)
                         html_bytes = page.read()
                         html = html_bytes.decode("utf-8")
                         cap_index = html.find('capacity_bar')
