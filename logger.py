@@ -1,13 +1,13 @@
 from urllib.request import urlopen
 from urllib.error import URLError
 
-import time, json, datetime, pickle, os, csv
+import time, datetime, os, csv
 
 import pandas as pd
 import plotext as plt
 
 
-class BoulderbarCapacityTracker:
+class BoulderbarCapacityLogger:
 
     date_fmt = "%d-%m-%Y %H:%M:%S"
     data_path = './boulderbar-capacity-log.csv'    
@@ -15,33 +15,48 @@ class BoulderbarCapacityTracker:
     prefix_url_other = 'https://shopsbg.boulderbar.net:8081/modules/bbext/CustomerCapacity.php?gym=%s'
 
     start_urls = [
-    ('Hannovergasse', prefix_url_wien, 'han'),
-    ('Wienerberg', prefix_url_wien, 'wb'),
-    ('Hauptbahnhof', prefix_url_wien, 'hbf'),
-    ('Seestadt', prefix_url_wien, 'see'),
-    ('Linz', prefix_url_other, 'LNZ'),
-    ('Salzburg', prefix_url_other, 'SBG'),
-]
-    def save(self, data):
-        file_exists = os.path.exists(BoulderbarCapacityTracker.data_path)
+        ('Hannovergasse', prefix_url_wien, 'han'),
+        ('Wienerberg', prefix_url_wien, 'wb'),
+        ('Hauptbahnhof', prefix_url_wien, 'hbf'),
+        ('Seestadt', prefix_url_wien, 'see'),
+        ('Linz', prefix_url_other, 'LNZ'),
+        ('Salzburg', prefix_url_other, 'SBG'),
+    ]
+
+    @staticmethod
+    def init():
+        file_exists = os.path.exists(BoulderbarCapacityLogger.data_path)
+
+        if not file_exists:   
+            with open(BoulderbarCapacityLogger.data_path, 'a', newline='\n') as csvfile:
+                fieldnames = ['Date', ] + [v[0] for v in BoulderbarCapacityLogger.start_urls]
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()                
+
+    @staticmethod
+    def save(data):
+        file_exists = os.path.exists(BoulderbarCapacityLogger.data_path)
             
-        with open(BoulderbarCapacityTracker.data_path, 'a', newline='\n') as csvfile:
-            fieldnames = ['Date', ] + [v[0] for v in BoulderbarCapacityTracker.start_urls]
+        with open(BoulderbarCapacityLogger.data_path, 'a', newline='\n') as csvfile:
+            fieldnames = ['Date', ] + [v[0] for v in BoulderbarCapacityLogger.start_urls]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             if not file_exists:
                 writer.writeheader()
             for date, vals in data:                    
-                entry = {'Date': date.strftime(BoulderbarCapacityTracker.date_fmt)}
+                entry = {'Date': date.strftime(BoulderbarCapacityLogger.date_fmt)}
                 for i, v in enumerate(vals):
-                    entry[BoulderbarCapacityTracker.start_urls[i][0]] = v
+                    entry[BoulderbarCapacityLogger.start_urls[i][0]] = v
                 print(entry)
                 writer.writerow(entry)
 
-    def run(self, _delay_min, _plot=False):
+    @staticmethod
+    def run(_delay_min, _plot=False):
 
         if _plot:
-            self.plot()
+            BoulderbarCapacityLogger.plot()
             return
+
+        BoulderbarCapacityLogger.init()
 
         data = []
 
@@ -50,7 +65,7 @@ class BoulderbarCapacityTracker:
 
                 values = []
                 try: 
-                    for name, prefix_url, url_postfix in BoulderbarCapacityTracker.start_urls:
+                    for name, prefix_url, url_postfix in BoulderbarCapacityLogger.start_urls:
                         page = urlopen(prefix_url % url_postfix)
                         html_bytes = page.read()
                         html = html_bytes.decode("utf-8")
@@ -69,25 +84,38 @@ class BoulderbarCapacityTracker:
 
                 # write to file
                 if len(data) > 10:
-                    self.save(data)
+                    BoulderbarCapacityLogger.save(data)
                     data = []                
                 
                 time.sleep(_delay_min * 60.0)
         except KeyboardInterrupt:   
             pass
         finally:
-            self.save(data)
-            
+            BoulderbarCapacityLogger.save(data)
 
-    def plot(self):
-        dtf = BoulderbarCapacityTracker.date_fmt.replace('%', '')
-        plt.date_form(dtf, dtf)
+    @staticmethod
+    def data_frame():
         try:
-            df = pd.read_csv(BoulderbarCapacityTracker.data_path)
+            df = pd.read_csv(BoulderbarCapacityLogger.data_path)
         except FileNotFoundError:
-            print(f'{BoulderbarCapacityTracker.data_path} not found.')
+            print(f'{BoulderbarCapacityLogger.data_path} not found.')
+            return None
+        df.set_index('Date')
+
+        if len(df) < 1:
+            df = None
+
+        return df 
+
+    @staticmethod
+    def plot():
+        df = BoulderbarCapacityLogger.data_frame()
+        if df is None:
+            print('No entries.')
             return
-        df.set_index('Date')       
+        
+        dtf = BoulderbarCapacityLogger.date_fmt.replace('%', '')
+        plt.date_form(dtf, dtf)     
         plt.title('Boulderbar Capacity')        
         for name in df.columns.values[1:]:
             date_vals = df.loc[:,'Date'].values
@@ -101,7 +129,7 @@ if __name__ == '__main__':
     import argparse  
 
     parser = argparse.ArgumentParser(
-                    prog='Boulderbar Capacity Tracker',
+                    prog='Boulderbar Capacity Logger',
                     description='Periodically fetches the Boulderbar capacity from the web (https://boulderbar.net/) and stores it in a CSV.')
 
     parser.add_argument('period', type=float, default=5.0,
@@ -110,4 +138,4 @@ if __name__ == '__main__':
                         help='Display data in the cmd-line.')
     args = parser.parse_args()
 
-    BoulderbarCapacityTracker().run(args.period, args.d)
+    BoulderbarCapacityLogger().run(args.period, args.d)
