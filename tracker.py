@@ -21,7 +21,7 @@ class BoulderbarCapacityTracker:
     ('Linz', 'LNZ'),
     ('Salzburg', 'SGB'),
 ]
-    def save(data):
+    def save(self, data):
         file_exists = os.path.exists(BoulderbarCapacityTracker.data_path)
             
         with open(BoulderbarCapacityTracker.data_path, 'a', newline='\n') as csvfile:
