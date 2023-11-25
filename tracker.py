@@ -10,7 +10,7 @@ import plotext as plt
 class BoulderbarCapacityTracker:
 
     date_fmt = "%d-%m-%Y %H:%M:%S"
-    data_path = './data-packup.csv'    
+    data_path = './boulderbar-capacity-log.csv'    
     prefix_url = 'https://flash-cloud.boulderbar.net/modules/bbext/CustomerCapacity.php?gym=%s'
 
     start_urls = [

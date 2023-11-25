@@ -2,4 +2,4 @@
 
 python -m venv env
 . ./env/bin/activate
-python ./tracker.py 5.0
+python ./tracker.py $1
