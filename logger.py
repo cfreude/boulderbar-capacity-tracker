@@ -24,32 +24,6 @@ class BoulderbarCapacityLogger:
     ]
 
     @staticmethod
-    def init():
-        file_exists = os.path.exists(BoulderbarCapacityLogger.data_path)
-
-        if not file_exists:   
-            with open(BoulderbarCapacityLogger.data_path, 'a', newline='\n') as csvfile:
-                fieldnames = ['Date', ] + [v[0] for v in BoulderbarCapacityLogger.start_urls]
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                writer.writeheader()                
-
-    @staticmethod
-    def save(data):
-        file_exists = os.path.exists(BoulderbarCapacityLogger.data_path)
-            
-        with open(BoulderbarCapacityLogger.data_path, 'a', newline='\n') as csvfile:
-            fieldnames = ['Date', ] + [v[0] for v in BoulderbarCapacityLogger.start_urls]
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            if not file_exists:
-                writer.writeheader()
-            for date, vals in data:                    
-                entry = {'Date': date.strftime(BoulderbarCapacityLogger.date_fmt)}
-                for i, v in enumerate(vals):
-                    entry[BoulderbarCapacityLogger.start_urls[i][0]] = v
-                print(entry)
-                writer.writerow(entry)
-
-    @staticmethod
     def run(_delay_min, _plot=False):
 
         if _plot:
@@ -75,7 +49,7 @@ class BoulderbarCapacityLogger:
                         percent = html[h2_index+4:h2_end-1]
                         values.append(percent)       
                 except URLError as e:
-                    values.append((name, None))  
+                    values.append(-1)
                     print("Error:", e.reason)
                 
                 entry = (datetime.datetime.now(), values)
@@ -92,6 +66,32 @@ class BoulderbarCapacityLogger:
             pass
         finally:
             BoulderbarCapacityLogger.save(data)
+
+    @staticmethod
+    def init():
+        file_exists = os.path.exists(BoulderbarCapacityLogger.data_path)
+
+        if not file_exists:   
+            with open(BoulderbarCapacityLogger.data_path, 'a', newline='\n') as csvfile:
+                fieldnames = ['Date', ] + [v[0] for v in BoulderbarCapacityLogger.start_urls]
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()                
+
+    @staticmethod
+    def save(data):
+        file_exists = os.path.exists(BoulderbarCapacityLogger.data_path)
+            
+        with open(BoulderbarCapacityLogger.data_path, 'a', newline='\n') as csvfile:
+            fieldnames = ['Date', ] + [v[0] for v in BoulderbarCapacityLogger.start_urls]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            if not file_exists:
+                writer.writeheader()
+            for date, vals in data:                    
+                entry = {'Date': date.strftime(BoulderbarCapacityLogger.date_fmt)}
+                for i, v in enumerate(vals):
+                    entry[BoulderbarCapacityLogger.start_urls[i][0]] = v
+                print(entry)
+                writer.writerow(entry)
 
     @staticmethod
     def data_frame():
@@ -132,10 +132,10 @@ if __name__ == '__main__':
                     prog='Boulderbar Capacity Logger',
                     description='Periodically fetches the Boulderbar capacity from the web (https://boulderbar.net/) and stores it in a CSV.')
 
-    parser.add_argument('period', type=float, default=5.0,
+    parser.add_argument('--p', required=False, type=float, default=5.0,
                         help='The period in minutes.')
     parser.add_argument('--d', action='store_true', default=False,
                         help='Display data in the cmd-line.')
     args = parser.parse_args()
 
-    BoulderbarCapacityLogger().run(args.period, args.d)
+    BoulderbarCapacityLogger().run(args.p, args.d)
