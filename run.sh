@@ -2,4 +2,4 @@
 
 python -m venv env
 . ./env/bin/activate
-python ./logger.py $1 $2
+python ./logger.py $1 $2 $3
