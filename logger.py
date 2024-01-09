@@ -12,7 +12,7 @@ class BoulderbarCapacityLogger:
     date_fmt = "%d-%m-%Y %H:%M:%S"
     data_path = './boulderbar-capacity-log.csv'    
     prefix_url_wien = 'https://flash-cloud.boulderbar.net/modules/bbext/CustomerCapacity.php?gym=%s'
-    prefix_url_other = 'https://shopsbg.boulderbar.net:8081/modules/bbext/CustomerCapacity.php?gym=%s'
+    prefix_url_other = 'https://flash-cloud-sbg.boulderbar.net/modules/bbext/CustomerCapacity.php?gym=%s'
 
     start_urls = [
         ('Hannovergasse', prefix_url_wien, 'han'),

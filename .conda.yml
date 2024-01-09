@@ -1,0 +1,10 @@
+# INIT: conda env create -f .conda.yml
+# UPDATE: conda env update --file .conda.yml --prune
+name: data
+dependencies:
+  - python=3
+  - pip
+  - matplotlib
+  - pandas
+  - jupyterlab
+  - plotly
