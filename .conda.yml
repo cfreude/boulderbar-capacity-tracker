@@ -1,10 +1,14 @@
 # INIT: conda env create -f .conda.yml
 # UPDATE: conda env update --file .conda.yml --prune
 name: data
+channels:
+  - conda-forge
+  - defaults
 dependencies:
   - python=3
   - pip
   - matplotlib
   - pandas
   - jupyterlab
-  - plotly
+  - dash
+  - dash-bootstrap-components
