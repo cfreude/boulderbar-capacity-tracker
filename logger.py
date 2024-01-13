@@ -56,14 +56,15 @@ class BoulderbarCapacityLogger:
 
         data = []
 
-        try: 
-            while True:
+        try:
+            # write first            
+            data.append((datetime.datetime.now(),  BoulderbarCapacityLogger.fetch_capacities()))
+            BoulderbarCapacityLogger.save(data)
+            data = []   
+            time.sleep(_delay_min * 60.0)
 
-                values = BoulderbarCapacityLogger.fetch_capacities()
-                
-                entry = (datetime.datetime.now(), values)
-                print(entry)
-                data.append(entry)
+            while True:                
+                data.append((datetime.datetime.now(),  BoulderbarCapacityLogger.fetch_capacities()))
 
                 # write to file
                 if len(data) > 10:
