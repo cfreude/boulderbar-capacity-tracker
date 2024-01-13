@@ -4,7 +4,6 @@ from urllib.error import URLError
 import time, datetime, os, csv
 
 import pandas as pd
-import plotext as plt
 
 
 class BoulderbarCapacityLogger:
@@ -24,6 +23,29 @@ class BoulderbarCapacityLogger:
     ]
 
     @staticmethod
+    def fetch_capacities():
+        values = []
+        try: 
+            for name, prefix_url, url_postfix in BoulderbarCapacityLogger.start_urls:
+                page = urlopen(prefix_url % url_postfix)
+                html_bytes = page.read()
+                html = html_bytes.decode("utf-8")
+                cap_index = html.find('capacity_bar')
+                h2_index = html.find('<h2>', cap_index)
+                h2_end = html.find('</h2>', h2_index+4)
+                percent = html[h2_index+4:h2_end-1]
+                values.append(percent)       
+        except URLError as e:
+            values.append(-1)
+            print("Error:", e.reason)
+        return values
+    
+    @staticmethod
+    def fetch_capacities_df():
+        values = BoulderbarCapacityLogger.fetch_capacities()
+        return pd.DataFrame([int(v) for v in values], index=[v[0] for v in BoulderbarCapacityLogger.start_urls], columns=['Occupancy Rate (%)'])
+
+    @staticmethod
     def run(_delay_min, _plot=False):
 
         if _plot:
@@ -37,20 +59,7 @@ class BoulderbarCapacityLogger:
         try: 
             while True:
 
-                values = []
-                try: 
-                    for name, prefix_url, url_postfix in BoulderbarCapacityLogger.start_urls:
-                        page = urlopen(prefix_url % url_postfix)
-                        html_bytes = page.read()
-                        html = html_bytes.decode("utf-8")
-                        cap_index = html.find('capacity_bar')
-                        h2_index = html.find('<h2>', cap_index)
-                        h2_end = html.find('</h2>', h2_index+4)
-                        percent = html[h2_index+4:h2_end-1]
-                        values.append(percent)       
-                except URLError as e:
-                    values.append(-1)
-                    print("Error:", e.reason)
+                values = BoulderbarCapacityLogger.fetch_capacities()
                 
                 entry = (datetime.datetime.now(), values)
                 print(entry)
@@ -96,11 +105,17 @@ class BoulderbarCapacityLogger:
     @staticmethod
     def data_frame():
         try:
-            df = pd.read_csv(BoulderbarCapacityLogger.data_path)
+            df = pd.read_csv(
+                BoulderbarCapacityLogger.data_path,
+                header=0,
+                sep=',',
+                na_values = {"-1",""})
         except FileNotFoundError:
             print(f'{BoulderbarCapacityLogger.data_path} not found.')
-            return None
-        df.set_index('Date')
+            return None       
+        
+        df['Date']= pd.to_datetime(df['Date'], format="%d-%m-%Y %H:%M:%S", yearfirst=False, dayfirst=True)
+        df = df.set_index('Date')
 
         if len(df) < 1:
             df = None
@@ -109,6 +124,8 @@ class BoulderbarCapacityLogger:
 
     @staticmethod
     def plot():
+        import plotext as plt
+        
         df = BoulderbarCapacityLogger.data_frame()
         if df is None:
             print('No entries.')
