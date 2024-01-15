@@ -6,10 +6,16 @@ from datetime import datetime
 from pytz import timezone  
 
 from logger import BoulderbarCapacityLogger
+#df = BoulderbarCapacityLogger.data_frame()
 
-df = BoulderbarCapacityLogger.data_frame()
+import requests
+response = requests.get('https://welcomed-thrush-sacred.ngrok-free.app/')
+df = pd.read_json(response.json())
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.MINTY])
+import flask
+server = flask.Flask(__name__)
+
+app = Dash(__name__, external_stylesheets=[dbc.themes.MINTY], server=server, routes_pathname_prefix="/")
 
 app.layout = html.Div([
     html.H1(children='Boulderbar Dashboard', style={'textAlign':'center'}),
