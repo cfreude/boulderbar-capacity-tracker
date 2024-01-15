@@ -15,18 +15,7 @@ class Log(Resource):
         else:
             return df.to_json()
 
-api.add_resource(Log, '/data')
-
-class App(Resource):
-    def get(self):
-        df = BoulderbarCapacityLogger.data_frame()
-        
-        if df is None:
-            return {}
-        else:
-            return df.to_json()
-
-api.add_resource(Log, '/app')
+api.add_resource(Log, '/')
 
 if __name__ == '__main__':
     app.run(debug=True)
