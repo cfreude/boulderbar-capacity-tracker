@@ -5,17 +5,24 @@ import pandas as pd
 from datetime import datetime
 from pytz import timezone  
 
-from logger import BoulderbarCapacityLogger
-#df = BoulderbarCapacityLogger.data_frame()
+from api.capacity import BoulderbarCapacity
 
-import requests
-response = requests.get('https://welcomed-thrush-sacred.ngrok-free.app/')
-df = pd.read_json(response.json())
+for_vercel = True
 
-import flask
-server = flask.Flask(__name__)
+if for_vercel:
+    import requests
+    response = requests.get('https://welcomed-thrush-sacred.ngrok-free.app/')
+    print(response)
+    df = pd.read_json(response.json())
+    print(df)
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.MINTY], server=server, routes_pathname_prefix="/")
+    import flask
+    server = flask.Flask(__name__)
+
+    app = Dash(__name__, external_stylesheets=[dbc.themes.MINTY], server=server, routes_pathname_prefix="/")
+else:
+    df = BoulderbarCapacity.data_frame('./boulderbar-capacity-log.csv') 
+    app = Dash(__name__, external_stylesheets=[dbc.themes.MINTY])
 
 app.layout = html.Div([
     html.H1(children='Boulderbar Dashboard', style={'textAlign':'center'}),
@@ -48,7 +55,7 @@ def update_current(value):
     vienna_time = datetime.now(vienna)
     time_str = vienna_time.strftime('%d.%m.%Y, %H:%M:%S')
 
-    current = BoulderbarCapacityLogger.fetch_capacities_df()
+    current = BoulderbarCapacity.fetch_capacities_df()
     current = current[current.index.isin(value)]  
 
     fig = px.bar(

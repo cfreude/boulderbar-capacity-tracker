@@ -10,5 +10,6 @@ dependencies:
   - matplotlib
   - pandas
   - jupyterlab
+  - flask
   - dash
   - dash-bootstrap-components
