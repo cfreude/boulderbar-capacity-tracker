@@ -9,22 +9,26 @@ from api.capacity import BoulderbarCapacity
 
 fetch_via_api = True
 
+df_loaded = False
+
 if fetch_via_api:
     import requests
     try:
         response = requests.get('https://welcomed-thrush-sacred.ngrok-free.app/')
         df = pd.read_json(response.json())
+        df_loaded = True
     except:
-        df = None
+        df_loaded = False
 else:
     df = BoulderbarCapacity.data_frame('./boulderbar-capacity-log.csv')
+    df_loaded = True
 
 st.title('Boulderbar Dashboard')
 
 st.write("https://boulderbar.net/")
 st.write('Overview of current, recorded and statistical occupancy rate data of the Boulderbars.')
 
-location = df.columns.values if df else ['Hannovergasse', 'Wienerberg', 'Hauptbahnhof', 'Seestadt', 'Linz', 'Salzburg']
+location = df.columns.values if df_loaded else ['Hannovergasse', 'Wienerberg', 'Hauptbahnhof', 'Seestadt', 'Linz', 'Salzburg']
 
 options = st.multiselect(
     'Locations:',
@@ -56,7 +60,7 @@ fig.update_xaxes(range=[0, 100])
 
 st.plotly_chart(fig, use_container_width=True)
 
-if df is None:
+if not df_loaded:
     st.write("Error: No statistics shown since loading of recorded data failed.")
     st.stop()
 
@@ -66,7 +70,7 @@ fig = px.line(
         df,
         x=df.index,
         y=options,
-        title="Timeline",
+        #title="Timeline",
         labels={
                      "Date": "Date",
                      "value": "Occupancy Rate (%)",
@@ -86,7 +90,7 @@ fig = px.line(
     daily_avg,
     x=daily_avg.index,
     y=options,
-    title="Daily Average",
+    #title="Daily Average",
     labels={
                     "Day": "Date",
                     "value": "Occupancy Rate (%)",
@@ -112,7 +116,7 @@ fig = px.line(
     weekday_mean,
     x=weekday_mean.index,
     y=options,
-    title="Weekday Average",
+    #title="Weekday Average",
     labels={
                     "Date": "Weekday",
                     "value": "Occupancy Rate (%)",
@@ -128,7 +132,7 @@ fig = px.line(
     hours_avg,
     x=hours_avg.index,
     y=options,
-    title="Hourly Average",
+    #title="Hourly Average",
     labels={
         "Date": "Hour",
         "value": "Occupancy Rate (%)",
@@ -155,7 +159,7 @@ fig = px.line(
     weekday_hours_avg,
     x=weekday_hours_avg.index,
     y=options,
-    title="Weekdays Hourly Average",
+    #title="Weekdays Hourly Average",
     labels={
                     "index": "Weekday-Hour",
                     "value": "Occupancy Rate (%)",
