@@ -10,6 +10,8 @@ dependencies:
   - matplotlib
   - pandas
   - jupyterlab
-  - flask
-  - dash
-  - dash-bootstrap-components
+  #- flask
+  #- dash
+  #- dash-bootstrap-components
+  - pip:
+    - streamlit
