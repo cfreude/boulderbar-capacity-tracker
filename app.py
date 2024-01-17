@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from pytz import timezone  
 import plotly.express as px
 
-from api.capacity import BoulderbarCapacity
+from capacity import BoulderbarCapacity
 
 df_loaded = False
 
@@ -76,12 +76,17 @@ with st.expander("Timeline"):
         ('Last Hour', 'Last Day', 'Last Week', 'Last Month', 'Last Year', 'All'),
         index=1, label_visibility='hidden', key='timeline')
     
-    from_date = datetime.now()
-    last_date = datetime.now() - timedelta_map[option]
+    td = timedelta_map[option]
 
-    mask = (df.index >= last_date) & (df.index <= from_date)
-    index = df.index[mask]    
-    timeline = df[df.index.isin(index)]
+    if td is None:
+        timeline = df
+    else:
+        from_date = datetime.now()
+        last_date = datetime.now() - td
+
+        mask = (df.index >= last_date) & (df.index <= from_date)
+        index = df.index[mask]    
+        timeline = df[df.index.isin(index)]
 
     fig = px.line(
             timeline,
@@ -109,14 +114,17 @@ with st.expander("Daily Average"):
         ('Last Week', 'Last Month', 'Last Year', 'All'),
         index=0, label_visibility='hidden', key='Daily Average',)
     
-    from_date = datetime.now()
-    last_date = datetime.now() - timedelta_map[option]
-    
     daily_avg = odh
 
-    mask = (daily_avg.index >= last_date) & (daily_avg.index <= from_date)
-    index = daily_avg.index[mask]    
-    daily_avg = daily_avg[daily_avg.index.isin(index)]
+    td = timedelta_map[option]
+
+    if td is not None:
+        from_date = datetime.now()
+        last_date = datetime.now() - td
+
+        mask = (daily_avg.index >= last_date) & (daily_avg.index <= from_date)
+        index = daily_avg.index[mask]    
+        daily_avg = daily_avg[daily_avg.index.isin(index)]
 
     daily_avg = daily_avg[daily_avg.columns].resample('D').mean()
 
