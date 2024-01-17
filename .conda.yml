@@ -7,11 +7,6 @@ channels:
 dependencies:
   - python=3
   - pip
-  - matplotlib
   - pandas
-  - jupyterlab
-  #- flask
-  #- dash
-  #- dash-bootstrap-components
   - pip:
     - streamlit

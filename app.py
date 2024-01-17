@@ -1,29 +1,23 @@
 import streamlit as st
 import pandas as pd
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from pytz import timezone  
 import plotly.express as px
 
 from api.capacity import BoulderbarCapacity
 
-fetch_via_api = True
-
 df_loaded = False
 
-if fetch_via_api:
-    import requests
-    try:
-        response = requests.get('https://welcomed-thrush-sacred.ngrok-free.app/')
-        df = pd.read_json(response.json())
-        df_loaded = True
-    except:
-        df_loaded = False
-else:
-    df = BoulderbarCapacity.data_frame('./boulderbar-capacity-log.csv')
+import requests
+try:
+    response = requests.get('https://welcomed-thrush-sacred.ngrok-free.app/')
+    df = pd.read_json(response.json())
     df_loaded = True
+except:
+    df_loaded = False
 
-st.title('Boulderbar Dashboard')
+st.title('Boulderbar-Chart')
 
 st.write("https://boulderbar.net/")
 st.write('Overview of current, recorded and statistical occupancy rate data of the Boulderbars.')
@@ -66,38 +60,77 @@ if not df_loaded:
 
 df = df[options]
 
-fig = px.line(
-        df,
-        x=df.index,
-        y=options,
-        #title="Timeline",
-        labels={
-                     "Date": "Date",
-                     "value": "Occupancy Rate (%)",
-                     "variable": "Location"
-                 },)
-
+timedelta_map = {
+    'Last Hour': timedelta(hours=1),
+    'Last Day': timedelta(days=1),
+    'Last Week': timedelta(weeks=1),
+    'Last Month': timedelta(weeks=4),
+    'Last Year': timedelta(weeks=52),
+    'All': None,
+}
 
 with st.expander("Timeline"):
+
+    option = st.selectbox(
+        'Timespan:',
+        ('Last Hour', 'Last Day', 'Last Week', 'Last Month', 'Last Year', 'All'),
+        index=1, label_visibility='hidden', key='timeline')
+    
+    from_date = datetime.now()
+    last_date = datetime.now() - timedelta_map[option]
+
+    mask = (df.index >= last_date) & (df.index <= from_date)
+    index = df.index[mask]    
+    timeline = df[df.index.isin(index)]
+
+    fig = px.line(
+            timeline,
+            x=timeline.index,
+            y=options,
+            #title="Timeline",
+            labels={
+                        "index": "Date",
+                        "value": "Occupancy Rate (%)",
+                        "variable": "Location"
+                    },)
+
+
     st.plotly_chart(fig, use_container_width=True)
 
 # mask the hours we want
 hours = df.index.hour
 mask = (hours >= 9) & (hours <= 23)
 odh = df[mask]
-daily_avg = odh[odh.columns].resample('D').mean()
-fig = px.line(
-    daily_avg,
-    x=daily_avg.index,
-    y=options,
-    #title="Daily Average",
-    labels={
-                    "Day": "Date",
-                    "value": "Occupancy Rate (%)",
-                    "variable": "Location"
-                },)
 
 with st.expander("Daily Average"):
+
+    option = st.selectbox(
+        'Timespan:',
+        ('Last Week', 'Last Month', 'Last Year', 'All'),
+        index=0, label_visibility='hidden', key='Daily Average',)
+    
+    from_date = datetime.now()
+    last_date = datetime.now() - timedelta_map[option]
+    
+    daily_avg = odh
+
+    mask = (daily_avg.index >= last_date) & (daily_avg.index <= from_date)
+    index = daily_avg.index[mask]    
+    daily_avg = daily_avg[daily_avg.index.isin(index)]
+
+    daily_avg = daily_avg[daily_avg.columns].resample('D').mean()
+
+    fig = px.line(
+        daily_avg,
+        x=daily_avg.index,
+        y=options,
+        #title="Daily Average",
+        labels={
+                        "index": "Date",
+                        "value": "Occupancy Rate (%)",
+                        "variable": "Location"
+                    },)
+
     st.plotly_chart(fig, use_container_width=True)
 
 weekday_mean = daily_avg.groupby(daily_avg.index.dayofweek)[daily_avg.columns].mean()

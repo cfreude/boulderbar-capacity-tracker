@@ -1,6 +1,2 @@
-# dash
-#Flask==3.0.0
-#dash
-#dash-bootstrap-components
 pandas
 streamlit

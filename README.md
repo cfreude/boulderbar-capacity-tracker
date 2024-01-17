@@ -1,3 +1,3 @@
-# Boulderbar Logger
+# Boulderbar-Chart
 
-Periodically fetches the Boulderbar capacity from the web (https://boulderbar.net/) and stores it in a CSV.
+Streamlit app providing an overview of current, recorded and statistical occupancy rate data of the Boulderbars (https://boulderbar.net/)
